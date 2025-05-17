@@ -1,3 +1,4 @@
+# Module Terraform Docker 
 terraform {
   required_providers {
     docker = {
@@ -7,6 +8,7 @@ terraform {
   }
 }
 
+# Chemin local Docker Provider
 provider "docker" {
   host = "unix:///var/run/docker.sock"
 }

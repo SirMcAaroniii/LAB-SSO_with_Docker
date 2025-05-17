@@ -1,0 +1,3 @@
+---
+# Variables pour le fichier ansible.cfg
+remote_user: "anais" 
