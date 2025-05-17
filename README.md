@@ -23,7 +23,14 @@ Pour que Terraform contacte correctement Docker, il faut :
 - ajouter notre utilisateur au groupe docker via la commande _sudo usermod -aG docker $USER_ et relancer l'appartenance au groupe avec _newgrp docker_ .
 
 
+# Quelques commandes intéressantes
+_Pour vérifier si la connexion à Gitlab sans configuration est fonctionnelle via le compte root_
+Récupérer le mdp root avec la commande suivante :
+_ docker exec -it {Container ID} cat /etc/gitlab/initial_root_password
+
+
 # Notes complémentaires
 Télécharger le projet Github pour avoir accès au laboratoire au complet. 
 Les variables seront à adapter en fonction de votre projet.
-Le conteneur Gitlab peut prendre entre 5 et 15min d'installation, même s'il est affiché, il peut ne pas être disponible. 
+
+Le conteneur Gitlab peut prendre entre 2 et 5 min d'installations. Il faut patienter 1 minute ou 2 même s'il apparait, car le serveur n'est pas accessible immédiatement.

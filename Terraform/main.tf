@@ -8,6 +8,7 @@ resource "docker_image" "gitlab" {
 resource "docker_container" "gitlab" {
   image = docker_image.gitlab.image_id
   name  = "conteneur_gitlab"
+  hostname = "gitlab"
   ports {
     internal = 80
     external = 80
