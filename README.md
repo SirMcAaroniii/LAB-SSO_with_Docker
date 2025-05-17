@@ -14,7 +14,7 @@ L'objectif est de se connecter à un serveur Gitlab via la solution SSO Keycloak
 
 
 # Schéma d'infra 
-![test2 drawio](https://github.com/user-attachments/assets/a0e5fc47-3ee8-4c74-a45f-937fe82560fe)
+![Lab2 drawio](https://github.com/user-attachments/assets/043ebd40-4991-4234-9aa1-5e0d0e68499d)
 
 
 # Notes complémentaires
