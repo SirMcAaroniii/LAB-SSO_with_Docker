@@ -1,3 +1,7 @@
+########################################################################################
+# CREATION DU CONTENEUR GITLAB 
+########################################################################################
+
 # Téléchargement de l'image GitLab CE officielle
 resource "docker_image" "gitlab" {
   name         = "gitlab/gitlab-ce:latest"
@@ -58,4 +62,21 @@ resource "null_resource" "inject_ssh_key" {
     interpreter = ["/bin/sh", "-c"]
   }
 }
+
+# Sortie du mdp root pour se connecter à l'instance gitlab
+data "external" "gitlab_root_pwd" {
+  depends_on = [docker_container.gitlab]
+  program    = ["bash", "${path.module}/scripts/get_gitlab_password.sh", docker_container.gitlab.name]
+}
+output "gitlab_root_password_message" {
+  description = "Message de fin indiquant le mot de passe root GitLab"
+  value       = "Voici le mot de passe root GitLab : ${data.external.gitlab_root_pwd.result["result"]}"
+  sensitive   = true
+}
+
+
+
+########################################################################################
+# CREATION DU CONTENEUR KEYCLOAK
+########################################################################################
 

@@ -26,10 +26,17 @@ Pour que Terraform contacte correctement Docker, il faut :
 Ansible doit également avoir quelques commandes nécessaires pour son bon fonctionnement : 
 - réduire les droits trop permissifs sur le dossier Ansible avec la commande _chmod go-w /chemin/vers/Ansible_
 
+## SCRIPTS 
+Descriptif des scripts Terraform :
+- get_gitlab_password.sh : récupère le mot de passe root du fichier temporaire
+- inject_ssh_key.sh : injecte la clé SSH pour la connexion Ansible au conteneur
+
 # Quelques commandes intéressantes
 Pour vérifier si la connexion à Gitlab sans configuration est fonctionnelle via le compte root, récupérer le mdp root avec la commande suivante et tenter de se connecter à l'interface locale en :80 :
 - docker exec -it {Container ID} cat /etc/gitlab/initial_root_password
 
+Pour afficher le mot de passe root de Gitlab après lancement du conteneur : 
+- terraform output gitlab_root_password_message
 
 # Notes complémentaires
 Télécharger le projet Github pour avoir accès au laboratoire au complet. 
