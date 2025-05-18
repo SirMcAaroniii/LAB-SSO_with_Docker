@@ -32,10 +32,7 @@ Descriptif des scripts Terraform :
 - inject_ssh_key.sh : injecte la clé SSH pour la connexion Ansible au conteneur
 
 # Quelques commandes intéressantes
-Pour vérifier si la connexion à Gitlab sans configuration est fonctionnelle via le compte root, récupérer le mdp root avec la commande suivante et tenter de se connecter à l'interface locale en :80 :
-- docker exec -it {Container ID} cat /etc/gitlab/initial_root_password
-
-Pour afficher le mot de passe root de Gitlab après lancement du conteneur : 
+Pour vérifier si la connexion à Gitlab sans configuration est fonctionnelle via le compte root, récupérer le mdp root avec la commande suivante :
 - terraform output gitlab_root_password_message
 
 # Notes complémentaires
