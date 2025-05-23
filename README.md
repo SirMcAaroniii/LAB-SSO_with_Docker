@@ -9,9 +9,13 @@ Le lab a été testé et approuvé fonctionnel sur les supports suivants:
 
 
 # Fonctionnement 
-Terraform est utilisé pour déployer les conteneurs sur Docker. 
-Ansible va aller configurer les conteneurs associés. 
-L'objectif est de se connecter à un serveur Gitlab via la solution SSO Keycloak.
+Terraform est utilisé pour : 
+- créer le réseau virtuel partagé 
+- déployer les conteneurs
+- monter les certificats TLS dans NGINX
+Ansible est utilisé pour : 
+- Configuration Realm Keycloak
+- Configuration OIDC Gitlab
 
 
 # Schéma d'infra 
@@ -28,11 +32,15 @@ Pour que Terraform contacte correctement Docker, il faut :
 Ansible doit également avoir quelques commandes nécessaires pour son bon fonctionnement : 
 - réduire les droits trop permissifs sur le dossier Ansible avec la commande _chmod go-w /chemin/vers/Ansible_
 
+## CERTS
+Decriptif des certs : 
+- ansible_key/ansible_key.pub : certificat et clé pour Ansible 
+
 ## SCRIPTS 
 Descriptif des scripts Terraform :
 - get_gitlab_password.sh : récupère le mot de passe root du fichier temporaire
-- inject_ssh_key_gitlab.sh : injecte la clé SSH pour la connexion Ansible au conteneur, via root.
-- inject_ssh_key_keycloak.sh : injecte la clé SSH pour la connexion Ansible au conteneur, via home.
+- inject_ssh_key_gitlab.sh : injecte le certificat public pour la connexion Ansible au conteneur, via root.
+- inject_ssh_key_keycloak.sh : injecte le certificat public pour la connexi on Ansible au conteneur, via home.
 
 
 # Notes complémentaires

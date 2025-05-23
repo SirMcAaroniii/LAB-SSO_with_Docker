@@ -7,22 +7,56 @@ resource "docker_network" "reseau_lab" {
   name = "reseau_lab"
 }
 
-# Certificat SSH pour Ansible
+# Certificat Ansible
 resource "tls_private_key" "ansible_key" {
   algorithm = "RSA"
   rsa_bits  = 2048
 }
-
 resource "local_file" "public_key" {
   content  = tls_private_key.ansible_key.public_key_openssh
-  filename = "${path.module}/ansible_key.pub"
+  filename = "${path.module}/certs/ansible_key.pub"
 }
-
 resource "local_file" "private_key" {
   content         = tls_private_key.ansible_key.private_key_pem
-  filename        = "${path.module}/ansible_key"
+  filename        = "${path.module}/certs/ansible_key"
   file_permission = "0600"
 }
+
+# Certificat NGINX
+resource "tls_private_key" "key_nginx" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+resource "tls_self_signed_cert" "cert" {
+  private_key_pem = tls_private_key.key_nginx.private_key_pem
+
+  subject {
+    common_name  = "gitlab.local"
+    organization = "Lab"
+  }
+
+  validity_period_hours = 8760
+  is_ca_certificate     = false
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth"
+  ]
+
+  dns_names = ["gitlab.local"]
+}
+
+resource "local_file" "tls_key" {
+  filename = "${path.module}/certs/gitlab.local.key"
+  content  = tls_private_key.key_nginx.private_key_pem
+}
+
+resource "local_file" "tls_cert" {
+  filename = "${path.module}/certs/gitlab.local.crt"
+  content  = tls_self_signed_cert.cert.cert_pem
+}
+
 
 
 ########################################################################################
@@ -45,10 +79,6 @@ resource "docker_container" "gitlab" {
     external = 80
   }
   ports {
-    internal = 443
-    external = 443
-  }
-  ports {
     internal = 22
     external = 2222
   }
@@ -66,7 +96,7 @@ resource "null_resource" "inject_ssh_key_gitlab" {
   ]
 
   provisioner "local-exec" {
-    command     = "${path.module}/scripts/inject_ssh_key_gitlab.sh gitlab ${path.module}/ansible_key.pub"
+    command     = "${path.module}/scripts/inject_ssh_key_gitlab.sh gitlab ${path.module}/certs/ansible_key.pub"
     interpreter = ["/bin/sh", "-c"]
   }
 }
@@ -97,7 +127,7 @@ resource "docker_container" "keycloak" {
     "KC_DB=postgres",
     "KC_DB_URL=jdbc:postgresql://keycloak-db:5432/keycloak",
     "KC_DB_USERNAME=keycloak",
-    "KC_DB_PASSWORD=changeme",
+    "KC_DB_PASSWORD=keycloak",
     "KC_HOSTNAME_STRICT=false",           
     "KC_PROXY=edge",                      
   ]
@@ -121,7 +151,7 @@ resource "null_resource" "inject_ssh_key_Keycloak" {
   ]
 
   provisioner "local-exec" {
-    command     = "${path.module}/scripts/inject_ssh_key_keycloak.sh keycloak ${path.module}/ansible_key.pub"
+    command     = "${path.module}/scripts/inject_ssh_key_keycloak.sh keycloak ${path.module}/certs/ansible_key.pub"
     interpreter = ["/bin/sh", "-c"]
   }
 }
@@ -141,7 +171,7 @@ resource "docker_container" "keycloak_db" {
   env = [
     "POSTGRES_DB=keycloak",
     "POSTGRES_USER=keycloak",
-    "POSTGRES_PASSWORD=changeme",
+    "POSTGRES_PASSWORD=keycloak",
   ]
 
   ports {
@@ -153,6 +183,41 @@ resource "docker_container" "keycloak_db" {
     name = docker_network.reseau_lab.name
   }
 }
+
+
+########################################################################################
+# CREATION DU CONTENEUR NGINX PROXY
+########################################################################################
+
+resource "docker_container" "nginx" {
+  name  = "nginx"
+  image = "nginx:stable"
+  restart = "always"
+
+  networks_advanced {
+    name = docker_network.reseau_lab.name
+  }
+
+  ports {
+    internal = 443
+    external = 443
+  }
+
+  mounts {
+    target     = "/etc/nginx/nginx.conf"
+    source     = abspath("${path.module}/nginx.conf")
+    type       = "bind"
+    read_only  = true
+  }
+
+  mounts {
+    target     = "/etc/nginx/certs"
+    source     = abspath("${path.module}/certs")
+    type       = "bind"
+    read_only  = true
+  }
+}
+
 
 ########################################################################################
 # SORTIES ATTENDUES 
