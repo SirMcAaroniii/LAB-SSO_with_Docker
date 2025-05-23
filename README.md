@@ -4,6 +4,8 @@ Mise en route d'une solution SSO avec déploiement Docker.
 
 # Concept 
 Proposition d'environnement laboratoire de la solution SSO Keycloak via Ansible, Terraform et Docker. 
+Le lab a été testé et approuvé fonctionnel sur les supports suivants: 
+- Windows 11 Pro
 
 
 # Fonctionnement 
