@@ -31,14 +31,9 @@ Ansible doit également avoir quelques commandes nécessaires pour son bon fonct
 ## SCRIPTS 
 Descriptif des scripts Terraform :
 - get_gitlab_password.sh : récupère le mot de passe root du fichier temporaire
-- inject_ssh_key.sh : injecte la clé SSH pour la connexion Ansible au conteneur
+- inject_ssh_key_gitlab.sh : injecte la clé SSH pour la connexion Ansible au conteneur, via root.
+- inject_ssh_key_keycloak.sh : injecte la clé SSH pour la connexion Ansible au conteneur, via home.
 
-# Quelques commandes intéressantes
-Pour vérifier si la connexion à Gitlab sans configuration est fonctionnelle via le compte root, récupérer le mdp root avec la commande suivante :
-- terraform output gitlab_root_password_message
 
 # Notes complémentaires
-Télécharger le projet Github pour avoir accès au laboratoire au complet. 
-Les variables seront à adapter en fonction de votre projet.
-
 Le conteneur Gitlab peut prendre entre 2 et 5 min d'installations. Il faut patienter 1 minute ou 2 même s'il apparait, car le serveur n'est pas accessible immédiatement.

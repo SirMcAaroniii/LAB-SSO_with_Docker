@@ -1,12 +1,11 @@
 ########################################################################################
-# CREATION DU RESEAU DOCKER ET CERTIFICAT SSH
+# CREATION DU RESEAU LAB ET DU CERTIFICAT SSH
 ########################################################################################
 
-# Reseau docker 
+# Creation du reseau lab
 resource "docker_network" "reseau_lab" {
   name = "reseau_lab"
 }
-
 
 # Certificat SSH pour Ansible
 resource "tls_private_key" "ansible_key" {
@@ -53,8 +52,9 @@ resource "docker_container" "gitlab" {
     internal = 22
     external = 2222
   }
+
   networks_advanced {
-    name = "reseau_lab"
+    name = docker_network.reseau_lab.name
   }
 }
 
@@ -76,33 +76,41 @@ resource "null_resource" "inject_ssh_key_gitlab" {
 # CREATION DU CONTENEUR KEYCLOAK
 ########################################################################################
 
-# Téléchargement de l'image Keycloak officielle
 resource "docker_image" "keycloak" {
-  name         = "keycloak/keycloak:latest"
-  keep_locally = false
+  name = "quay.io/keycloak/keycloak:24.0.3"
 }
 
-# Création du conteneur Keycloak
 resource "docker_container" "keycloak" {
-  image = docker_image.keycloak.image_id
   name  = "keycloak"
+  image = docker_image.keycloak.name
+
+  restart = "unless-stopped"
 
   ports {
     internal = 8080
     external = 8080
   }
-  networks_advanced {
-    name = "reseau_lab"
-  }
 
   env = [
     "KEYCLOAK_ADMIN=admin",
     "KEYCLOAK_ADMIN_PASSWORD=admin",
-    "KC_HEALTH_ENABLED=true",
-    "KC_METRICS_ENABLED=true"
+    "KC_DB=postgres",
+    "KC_DB_URL=jdbc:postgresql://keycloak-db:5432/keycloak",
+    "KC_DB_USERNAME=keycloak",
+    "KC_DB_PASSWORD=changeme",
+    "KC_HOSTNAME_STRICT=false",           
+    "KC_PROXY=edge",                      
   ]
 
-  command = ["start-dev"]
+  command = ["start"]
+
+  depends_on = [
+    docker_container.keycloak_db
+  ]
+
+  networks_advanced {
+    name = docker_network.reseau_lab.name
+  }
 }
 
 # Injection de la clé dans le conteneur
@@ -118,6 +126,33 @@ resource "null_resource" "inject_ssh_key_Keycloak" {
   }
 }
 
+########################################################################################
+# CREATION DU CONTENEUR POSTGRESQL POUR KEYCLOAK
+########################################################################################
+
+resource "docker_image" "postgres" {
+  name = "postgres:16"
+}
+
+resource "docker_container" "keycloak_db" {
+  name  = "keycloak-db"
+  image = docker_image.postgres.name
+
+  env = [
+    "POSTGRES_DB=keycloak",
+    "POSTGRES_USER=keycloak",
+    "POSTGRES_PASSWORD=changeme",
+  ]
+
+  ports {
+    internal = 5432
+    external = 5432
+  }
+
+  networks_advanced {
+    name = docker_network.reseau_lab.name
+  }
+}
 
 ########################################################################################
 # SORTIES ATTENDUES 
@@ -132,7 +167,7 @@ data "external" "gitlab_root_pwd" {
 output "gitlab_root_password_message" {
   description = "Message de fin indiquant le mot de passe root GitLab"
   value       = "Voici le mot de passe root GitLab : ${data.external.gitlab_root_pwd.result["result"]}"
-  sensitive   = true
+  sensitive   = false
 }
 
 # Informations Keycloak
