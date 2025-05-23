@@ -1,1 +1,47 @@
+########################################################################################
+# CONFIGURATION GITLAB
+########################################################################################
+
 ---
+
+- name: Configuration GitLab
+  hosts: gitlab
+
+  tasks:
+    - name: Créer le répertoire /etc/gitlab/ssl s'il n'existe pas
+      file:
+        path: /etc/gitlab/ssl
+        state: directory
+        owner: root
+        group: root
+        mode: '0700'
+
+    - name: Copier le certificat dans /etc/gitlab/ssl
+      copy:
+        src: /mnt/c/Users/anais/OneDrive/Bureau/Projets_pro/SSO_wicth_Docker/LAB-SSO_with_Docker/Terraform/certs/gitlab.lab.crt
+        dest: /etc/gitlab/ssl/gitlab.lab.crt
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Copier la clé privée dans /etc/gitlab/ssl
+      copy:
+        src: /mnt/c/Users/anais/OneDrive/Bureau/Projets_pro/SSO_wicth_Docker/LAB-SSO_with_Docker/Terraform/certs/gitlab.lab.key
+        dest: /etc/gitlab/ssl/gitlab.lab.key
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: Met à jour l'external_url
+      lineinfile:
+        path: /etc/gitlab/gitlab.rb
+        regexp: "^external_url"
+        line: "external_url 'https://gitlab.lab'"
+        create: yes
+        backup: yes
+
+    - name: Reconfigure GitLab
+      command: gitlab-ctl reconfigure
+
+    - name: Restart GitLab
+      command: gitlab-ctl restart

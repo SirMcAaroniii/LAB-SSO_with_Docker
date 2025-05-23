@@ -31,7 +31,7 @@ resource "tls_self_signed_cert" "cert" {
   private_key_pem = tls_private_key.key_nginx.private_key_pem
 
   subject {
-    common_name  = "gitlab.local"
+    common_name  = "gitlab.lab"
     organization = "Lab"
   }
 
@@ -44,16 +44,16 @@ resource "tls_self_signed_cert" "cert" {
     "server_auth"
   ]
 
-  dns_names = ["gitlab.local"]
+  dns_names = ["gitlab.lab"]
 }
 
 resource "local_file" "tls_key" {
-  filename = "${path.module}/certs/gitlab.local.key"
+  filename = "${path.module}/certs/gitlab.lab.key"
   content  = tls_private_key.key_nginx.private_key_pem
 }
 
 resource "local_file" "tls_cert" {
-  filename = "${path.module}/certs/gitlab.local.crt"
+  filename = "${path.module}/certs/gitlab.lab.crt"
   content  = tls_self_signed_cert.cert.cert_pem
 }
 
@@ -215,6 +215,26 @@ resource "docker_container" "nginx" {
     source     = abspath("${path.module}/certs")
     type       = "bind"
     read_only  = true
+  }
+}
+
+
+########################################################################################
+# APPLICATION DU PLAYBOOK ANSIBLE
+########################################################################################
+
+resource "null_resource" "ansible_gitlab_config" {
+  depends_on = [
+    docker_container.gitlab
+  ]
+
+  triggers = {
+    playbook_sha  = filesha256("/mnt/c/Users/anais/OneDrive/Bureau/Projets_pro/SSO_wicth_Docker/LAB-SSO_with_Docker/Ansible/playbook.yml")
+    inventory_sha = filesha256("/mnt/c/Users/anais/OneDrive/Bureau/Projets_pro/SSO_wicth_Docker/LAB-SSO_with_Docker/Ansible/inventory.ini")
+  }
+
+  provisioner "local-exec" {
+    command = "ansible-playbook -i /mnt/c/Users/anais/OneDrive/Bureau/Projets_pro/SSO_wicth_Docker/LAB-SSO_with_Docker/Ansible/inventory.ini /mnt/c/Users/anais/OneDrive/Bureau/Projets_pro/SSO_wicth_Docker/LAB-SSO_with_Docker/Ansible/playbook.yml"
   }
 }
 
