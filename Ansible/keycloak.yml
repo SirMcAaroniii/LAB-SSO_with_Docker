@@ -1,0 +1,20 @@
+---
+- name: Création du fichier conf
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Créer le fichier keycloak.conf localement
+      copy:
+        dest: /tmp/keycloak.conf
+        content: |
+          {
+            "clientId": "gitlab-client",
+            "enabled": true,
+            "redirectUris": ["https://gitlab.lab/users/auth/openid_connect/callback"],
+            "publicClient": false,
+            "protocol": "openid-connect",
+            "secret": "SECRETPASSECRET"
+          }
+    - name: Créer le dossier keycloak
+      command: docker exec --user root keycloak mkdir -p /etc/keycloak
+

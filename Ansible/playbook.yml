@@ -3,7 +3,6 @@
 ########################################################################################
 
 ---
-
 - name: Configuration GitLab
   hosts: gitlab
 
@@ -40,8 +39,40 @@
         create: yes
         backup: yes
 
-    - name: Reconfigure GitLab
-      command: gitlab-ctl reconfigure
+    - name: Copier fichier gitlab.rb avec config OAuth
+      copy:
+        dest: /tmp/gitlab.rb
+        content: |
+          external_url 'https://gitlab.lab'
+          gitlab_rails['omniauth_enabled'] = true
+          gitlab_rails['omniauth_allow_single_sign_on'] = ['openid_connect']
+          gitlab_rails['omniauth_block_auto_created_users'] = false
+          gitlab_rails['omniauth_providers'] = [
+            {
+              name: 'openid_connect',
+              label: 'Keycloak',
+              args: {
+                name: 'openid_connect',
+                scope: ['openid', 'profile', 'email'],
+                response_type: 'code',
+                issuer: 'https://keycloak.lab/auth/realms/gitlab-realm',
+                discovery: true,
+                client_auth_method: 'basic',
+                client_id: 'gitlab-client',
+                client_secret: 'SECRETPASSECRET',
+                redirect_uri: 'https://gitlab.lab/users/auth/openid_connect/callback'
+              }
+            }
+          ]
+      delegate_to: localhost
+
+    - name: Copier gitlab.rb dans le conteneur GitLab
+      command: docker cp /tmp/gitlab.rb gitlab:/etc/gitlab/gitlab.rb
+      delegate_to : localhost
+
+    - name: Reconfigurer GitLab
+      command: docker exec gitlab gitlab-ctl reconfigure
+      delegate_to : localhost
 
     - name: Restart GitLab
       command: gitlab-ctl restart

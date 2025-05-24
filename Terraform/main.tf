@@ -128,15 +128,15 @@ resource "docker_container" "keycloak" {
     "KC_DB_URL=jdbc:postgresql://keycloak-db:5432/keycloak",
     "KC_DB_USERNAME=keycloak",
     "KC_DB_PASSWORD=keycloak",
-    "KC_HOSTNAME_STRICT=false",           
+    "KC_HOSTNAME_STRICT=false",
+    "KC_CONF=/etc/keycloak/keycloak.conf",           
     "KC_PROXY=edge",                      
   ]
-
-  command = ["start"]
 
   depends_on = [
     docker_container.keycloak_db
   ]
+
 
   networks_advanced {
     name = docker_network.reseau_lab.name
@@ -215,26 +215,6 @@ resource "docker_container" "nginx" {
     source     = abspath("${path.module}/certs")
     type       = "bind"
     read_only  = true
-  }
-}
-
-
-########################################################################################
-# APPLICATION DU PLAYBOOK ANSIBLE
-########################################################################################
-
-resource "null_resource" "ansible_gitlab_config" {
-  depends_on = [
-    docker_container.gitlab
-  ]
-
-  triggers = {
-    playbook_sha  = filesha256("/mnt/c/Users/anais/OneDrive/Bureau/Projets_pro/SSO_wicth_Docker/LAB-SSO_with_Docker/Ansible/playbook.yml")
-    inventory_sha = filesha256("/mnt/c/Users/anais/OneDrive/Bureau/Projets_pro/SSO_wicth_Docker/LAB-SSO_with_Docker/Ansible/inventory.ini")
-  }
-
-  provisioner "local-exec" {
-    command = "ansible-playbook -i /mnt/c/Users/anais/OneDrive/Bureau/Projets_pro/SSO_wicth_Docker/LAB-SSO_with_Docker/Ansible/inventory.ini /mnt/c/Users/anais/OneDrive/Bureau/Projets_pro/SSO_wicth_Docker/LAB-SSO_with_Docker/Ansible/playbook.yml"
   }
 }
 

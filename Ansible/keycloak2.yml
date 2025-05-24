@@ -1,0 +1,12 @@
+---
+- name: Copie du fichier
+  hosts: keycloak
+  gather_facts: no
+  tasks:
+    - name: Copier config Keycloak depuis localhost vers conteneur
+      command: docker cp /tmp/keycloak.conf keycloak:/etc/keycloak/keycloak.conf
+      delegate_to: localhost
+
+    - name: Redémarrer le conteneur Keycloak
+      command: docker restart keycloak
+      delegate_to: localhost
